@@ -8,7 +8,12 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* === THIS IS THE FIX === */
+  /* REMOVED the purple gradient */
+  /* ADDED a clean, solid, light-gray background */
+  background-color: #f8fafc;
+  
   background-attachment: fixed;
   color: #1a1a1a;
   line-height: 1.6;
@@ -18,7 +23,7 @@ body {
   min-height: 100vh;
 }
 
-/* Scrollbar Styling */
+/* Scrollbar Styling (Kept your nice scrollbar) */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -28,12 +33,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #667eea;
+  /* Updated to match new theme */
+  background: #0093E9;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #764ba2;
+  /* Updated to match new theme */
+  background: #0072ff;
 }
 
 /* Animations */

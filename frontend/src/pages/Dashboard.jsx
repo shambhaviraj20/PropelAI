@@ -34,28 +34,28 @@ const Dashboard = () => {
       title: 'Success Prediction',
       description: 'Get AI-powered insights about your startup\'s potential using machine learning',
       link: '/predict',
-      color: '#667eea'
+      color: '#0093E9' // Updated color
     },
     {
       icon: '🤖',
       title: 'AI Advisor',
       description: 'Ask questions and get personalized advice for your startup journey',
       link: '/advisor',
-      color: '#764ba2'
+      color: '#34A89A' // Updated color
     },
     {
       icon: '💼',
       title: 'Pitch Analyzer',
       description: 'Improve your pitch with AI-powered feedback and scoring',
       link: '/pitch',
-      color: '#f093fb'
+      color: '#f093fb' // Kept this one for variety
     },
     {
       icon: '💰',
       title: 'Investor Matching',
       description: 'Find the perfect investors matched to your startup profile',
       link: '/investors',
-      color: '#4facfe'
+      color: '#4facfe' // Kept this one for variety
     }
   ];
 

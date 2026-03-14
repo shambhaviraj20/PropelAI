@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
+import logo from "../../assets/logo1.png";
+
 
 const Navbar = () => {
   const location = useLocation();
@@ -18,8 +20,8 @@ const Navbar = () => {
     <nav className="modern-navbar">
       <div className="navbar-container">
         <Link to="/dashboard" className="navbar-brand">
-          <div className="brand-icon">🚀</div>
-          <span className="brand-text">Propel Ai</span>
+          <img src={logo} alt="Propel AI Logo" />
+          <span className="brand-text">Propel AI</span>
         </Link>
 
         <button 

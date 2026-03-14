@@ -1,28 +1,42 @@
+/* ============================================
+   MODERN NAVBAR
+   ============================================ */
+
 .modern-navbar {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  /* Updated gradient */
+  background: linear-gradient(135deg, #0093E9 0%, #80D0C7 100%);
+  /* Updated shadow */
+  box-shadow: 0 4px 20px rgba(0, 147, 233, 0.25);
+  padding: 0 20px;
   position: sticky;
   top: 0;
   z-index: 1000;
-  animation: slideIn 0.6s ease-out;
+  height: 70px;
 }
+.navbar-brand img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
 
 .navbar-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 100%;
 }
 
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 1rem;
   text-decoration: none;
+  color: white;
   transition: transform 0.3s;
+  gap: 7px;
+  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 .navbar-brand:hover {
@@ -31,117 +45,101 @@
 
 .brand-icon {
   font-size: 2rem;
-  animation: float 3s ease-in-out infinite;
+  margin-right: 10px;
+  line-height: 1; /* Fixes vertical alignment */
 }
 
 .brand-text {
   font-size: 1.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .navbar-menu {
   display: flex;
-  list-style: none;
-  gap: 0.5rem;
   align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 10px 15px;
+  margin: 0 5px;
   text-decoration: none;
-  color: #333;
+  color: rgba(255, 255, 255, 0.85);
   font-weight: 600;
+  font-size: 1rem;
   border-radius: 12px;
   transition: all 0.3s;
   position: relative;
-  overflow: hidden;
-}
-
-.nav-link::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  transition: left 0.3s;
-  z-index: -1;
-}
-
-.nav-link:hover::before {
-  left: 0;
-}
-
-.nav-link:hover {
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.nav-link.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
 .nav-icon {
+  margin-right: 8px;
   font-size: 1.2rem;
 }
 
-.nav-link.logout {
-  background: #ff4757;
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link.logout {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .nav-link.logout:hover {
-  background: #ff3838;
+  background: white;
+  color: #d9534f;
 }
 
 .mobile-menu-btn {
   display: none;
   background: none;
   border: none;
+  color: white;
   font-size: 2rem;
   cursor: pointer;
-  color: #333;
 }
 
-@media (max-width: 768px) {
-  .mobile-menu-btn {
-    display: block;
-  }
-
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 968px) {
   .navbar-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
+    display: none;
     flex-direction: column;
-    padding: 1rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    transform: translateY(-100%);
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s;
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    /* Updated gradient for mobile menu */
+    background: linear-gradient(135deg, #0093E9 0%, #80D0C7 100%);
+    box-shadow: 0 10px 20px rgba(0, 147, 233, 0.2);
+    padding: 10px 0;
   }
 
   .navbar-menu.active {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: all;
+    display: flex;
   }
 
   .nav-link {
-    width: 100%;
+    width: 90%;
+    margin: 5px auto;
+    padding: 12px;
     justify-content: center;
+  }
+
+  .mobile-menu-btn {
+    display: block;
   }
 }

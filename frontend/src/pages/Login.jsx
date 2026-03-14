@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import './Login.css'; // <-- Import the new CSS file
 
 const Login = ({ setAuth }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
       const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
       const response = await axios.post(`http://localhost:5000${endpoint}`, {
@@ -22,90 +28,61 @@ const Login = ({ setAuth }) => {
       setAuth(true);
       navigate('/dashboard');
     } catch (error) {
-      alert(error.response?.data?.error || 'Authentication failed');
+      setError(error.response?.data?.error || 'Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    }}>
-      <div style={{
-        background: 'white',
-        padding: '3rem',
-        borderRadius: '12px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-        width: '400px'
-      }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          {isRegister ? 'Register' : 'Login'}
-        </h1>
+    <div className="login-container">
+      <div className="login-card">
+        <h1>{isRegister ? 'Register' : 'Login'}</h1>
+        
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1rem' }}>
+          <div className="form-group">
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem'
-              }}
+              className="form-input"
             />
           </div>
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div className="form-group">
             <input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem'
-              }}
+              className="form-input"
             />
           </div>
+
+          {error && (
+            <div className="error-message">{error}</div>
+          )}
+
           <button
             type="submit"
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: '#667eea',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: 'bold',
-              cursor: 'pointer'
-            }}
+            className="submit-btn"
+            disabled={loading}
           >
-            {isRegister ? 'Register' : 'Login'}
+            {loading ? 'Processing...' : (isRegister ? 'Register' : 'Login')}
           </button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: '1rem' }}>
+
+        <p className="toggle-text">
           {isRegister ? 'Already have an account?' : "Don't have an account?"}
           <button
-            onClick={() => setIsRegister(!isRegister)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#667eea',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              marginLeft: '5px'
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setError('');
             }}
+            className="toggle-btn"
+            disabled={loading}
           >
             {isRegister ? 'Login' : 'Register'}
           </button>

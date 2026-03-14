@@ -4,7 +4,8 @@
   margin: 0 auto;
   padding: 40px 20px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+  /* UPDATED: Removed gradient, uses global solid background */
+  background-color: transparent;
 }
 
 /* ============================================
@@ -30,7 +31,7 @@
 .investor-header h1 {
   font-size: 3.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0093E9 0%, #80D0C7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -78,8 +79,8 @@
 
 .stat-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 50px rgba(102, 126, 234, 0.15);
-  border-color: #667eea;
+  box-shadow: 0 20px 50px rgba(0, 147, 233, 0.15);
+  border-color: #0093E9;
 }
 
 .stat-icon {
@@ -149,8 +150,8 @@
 
 .filter-group select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: #0093E9;
+  box-shadow: 0 0 0 4px rgba(0, 147, 233, 0.1);
 }
 
 .filter-actions {
@@ -170,14 +171,14 @@
 }
 
 .apply-filter-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0093E9 0%, #80D0C7 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 147, 233, 0.3);
 }
 
 .apply-filter-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 25px rgba(0, 147, 233, 0.4);
 }
 
 .reset-filter-btn {
@@ -225,8 +226,8 @@
 
 .investor-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 25px 60px rgba(102, 126, 234, 0.2);
-  border-color: #667eea;
+  box-shadow: 0 25px 60px rgba(0, 147, 233, 0.2);
+  border-color: #0093E9;
 }
 
 /* ============================================
@@ -254,7 +255,7 @@
 }
 
 .match-score.good {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #0093E9 0%, #0072ff 100%);
 }
 
 .match-score.moderate {
@@ -349,7 +350,7 @@
 }
 
 .detail-value.highlight {
-  color: #667eea;
+  color: #0093E9;
 }
 
 /* ============================================
@@ -373,7 +374,7 @@
 }
 
 .focus-tag:hover {
-  background: #667eea;
+  background: #0093E9;
   color: white;
   transform: scale(1.05);
 }
@@ -409,7 +410,7 @@
 .contact-btn {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0093E9 0%, #80D0C7 100%);
   color: white;
   border: none;
   border-radius: 14px;
@@ -418,12 +419,12 @@
   cursor: pointer;
   margin-top: 25px;
   transition: all 0.3s;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 147, 233, 0.3);
 }
 
 .contact-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 147, 233, 0.4);
 }
 
 /* ============================================
@@ -438,7 +439,7 @@
   width: 70px;
   height: 70px;
   border: 6px solid #e2e8f0;
-  border-top-color: #667eea;
+  border-top-color: #0093E9;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 25px;
@@ -484,7 +485,7 @@
 
 .add-data-btn {
   padding: 16px 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0093E9 0%, #80D0C7 100%);
   color: white;
   border: none;
   border-radius: 14px;
@@ -492,12 +493,12 @@
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 147, 233, 0.3);
 }
 
 .add-data-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 147, 233, 0.4);
 }
 
 /* ============================================

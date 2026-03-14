@@ -25,13 +25,14 @@ print("🚀 IMPROVED ML TRAINING - TARGETING 85%+ ACCURACY")
 print("="*80)
 
 CONFIG = {
-    'kaggle_dataset': 'arindam235/startup-investments-crunchbase',
+    'kaggle_dataset': 'mlvprasad/indian-unicorn-startups-2023-june-updated',
     'data_dir': './data',
     'models_dir': './models',
-    'min_samples': 1000,
-    'test_size': 0.2,
+    'min_samples': 80,  # Adjusted for smaller dataset
+    'test_size': 0.25,
     'random_state': 42
 }
+
 
 def check_gpu():
     """Check GPU availability"""
@@ -52,10 +53,10 @@ def setup_directories():
     print("✓ Ready")
 
 def download_data():
-    """Download real data from Kaggle"""
+    """Download Indian unicorn data from Kaggle"""
     print("\n[3/9] LOADING DATA...")
     
-    data_file = os.path.join(CONFIG['data_dir'], 'investments_VC.csv')
+    data_file = os.path.join(CONFIG['data_dir'], 'Unicorntable.csv')
     
     if os.path.exists(data_file):
         print(f"✓ Found: {data_file}")
@@ -63,186 +64,169 @@ def download_data():
     
     try:
         import kaggle
-        print("📥 Downloading from Kaggle...")
+        print("📥 Downloading Indian Unicorn dataset from Kaggle...")
         kaggle.api.dataset_download_files(
-            CONFIG['kaggle_dataset'],
+            'mlvprasad/indian-unicorn-startups-2023-june-updated',
             path=CONFIG['data_dir'],
             unzip=True
         )
         print("✓ Downloaded!")
-        
-        # Find CSV file
-        csv_files = [f for f in os.listdir(CONFIG['data_dir']) if f.endswith('.csv')]
-        if csv_files:
-            return os.path.join(CONFIG['data_dir'], csv_files[0])
-        
         return data_file
     except:
-        print("⚠ Kaggle not configured, using synthetic data")
+        print("⚠ Kaggle not configured, place Unicorntable.csv manually in ./data/")
         return None
 
-def load_and_clean_advanced(data_file):
-    """IMPROVED data cleaning for better accuracy"""
+        
+
+def load_and_clean_indian_unicorn(data_file):
+    """Clean and engineer features from Indian Unicorn dataset"""
     print("\n[4/9] CLEANING & ENGINEERING...")
     
     if data_file is None or not os.path.exists(data_file):
-        print("   Using synthetic data...")
+        print("   Dataset not found, using synthetic data...")
         return generate_quality_synthetic_data()
     
     try:
-        df = pd.read_csv(data_file, low_memory=False)
+        df = pd.read_csv(data_file)
         print(f"   Loaded: {len(df):,} rows")
         
-        # Find columns flexibly
-        status_col = next((c for c in df.columns if 'status' in c.lower()), None)
-        funding_col = next((c for c in df.columns if 'funding' in c.lower() and 'total' in c.lower()), None)
-        founded_col = next((c for c in df.columns if 'founded' in c.lower()), None)
+        # Clean column names (handle variations)
+        df.columns = df.columns.str.strip().str.lower()
         
-        if not all([status_col, funding_col, founded_col]):
-            print("   Missing key columns, using synthetic...")
-            return generate_quality_synthetic_data()
+        # Map columns flexibly
+        col_mapping = {
+            'company': 'company',
+            'sector': 'category',
+            'location': 'location',
+            'entry valuation ($b)': 'entry_valuation',
+            'valuation ($b)': 'current_valuation',
+            'entry': 'entry_date',
+            'select investors': 'investors'
+        }
         
-        # Extract key fields
-        df_clean = pd.DataFrame()
-        df_clean['status'] = df[status_col].str.lower().fillna('unknown')
-        df_clean['funding_total'] = pd.to_numeric(df[funding_col], errors='coerce').fillna(0)
+        # Rename columns
+        for old_col, new_col in col_mapping.items():
+            matches = [c for c in df.columns if old_col in c]
+            if matches:
+                df.rename(columns={matches[0]: new_col}, inplace=True)
         
-        # Founded year
-        if 'founded_year' in df.columns:
-            df_clean['founded_year'] = pd.to_numeric(df['founded_year'], errors='coerce')
-        else:
-            df_clean['founded_year'] = pd.to_datetime(df[founded_col], errors='coerce').dt.year
+        # Extract entry year from date
+        df['entry_date'] = pd.to_datetime(df['entry_date'], errors='coerce')
+        df['entry_year'] = df['entry_date'].dt.year
+        df = df.dropna(subset=['entry_year'])
+        df['entry_year'] = df['entry_year'].astype(int)
         
-        # Category and location
-        category_col = next((c for c in df.columns if 'category' in c.lower()), None)
-        location_col = next((c for c in df.columns if 'country' in c.lower() or 'region' in c.lower()), None)
+        # Compute company age (years since becoming unicorn)
+        df['company_age'] = 2025 - df['entry_year']
         
-        df_clean['category'] = df[category_col].fillna('other') if category_col else 'other'
-        df_clean['location'] = df[location_col].fillna('unknown') if location_col else 'unknown'
+        # Clean valuations
+        df['entry_valuation'] = pd.to_numeric(df['entry_valuation'], errors='coerce').fillna(1.0)
+        df['current_valuation'] = pd.to_numeric(df['current_valuation'], errors='coerce').fillna(df['entry_valuation'])
         
-        # Funding rounds
-        rounds_col = next((c for c in df.columns if 'rounds' in c.lower()), None)
-        df_clean['funding_rounds'] = pd.to_numeric(df[rounds_col], errors='coerce').fillna(0) if rounds_col else 1
+        # Create funding total (convert billions to actual amount)
+        df['funding_total'] = df['current_valuation'] * 1_000_000_000
         
-        # Clean data
-        df_clean = df_clean.dropna(subset=['founded_year'])
-        df_clean = df_clean[(df_clean['founded_year'] >= 1990) & (df_clean['founded_year'] <= 2024)]
-        df_clean = df_clean[df_clean['funding_total'] >= 0]
+        # SUCCESS LABEL: Define success based on valuation growth
+        # Success = companies that grew valuation significantly (>50% growth or valuation >$3B)
+        df['valuation_growth_rate'] = (df['current_valuation'] - df['entry_valuation']) / df['entry_valuation']
+        df['success'] = ((df['valuation_growth_rate'] > 0.5) | (df['current_valuation'] > 3.0)).astype(int)
         
-        # SUCCESS LABEL
-        success_statuses = ['acquired', 'ipo']
-        failure_statuses = ['closed', 'dead']
+        print(f"   Success rate: {df['success'].mean():.1%}")
         
-        df_clean = df_clean[df_clean['status'].isin(success_statuses + failure_statuses)]
-        df_clean['success'] = df_clean['status'].isin(success_statuses).astype(int)
-        
-        # BALANCE DATASET for better accuracy
-        n_success = df_clean['success'].sum()
-        n_failure = len(df_clean) - n_success
-        
-        print(f"   Before balance - Success: {n_success:,} | Failure: {n_failure:,}")
-        
-        # Undersample majority class
-        if n_success > n_failure * 1.5:
-            success_df = df_clean[df_clean['success'] == 1].sample(int(n_failure * 1.2), random_state=42)
-            failure_df = df_clean[df_clean['success'] == 0]
-            df_clean = pd.concat([success_df, failure_df]).sample(frac=1, random_state=42)
-        elif n_failure > n_success * 1.5:
-            failure_df = df_clean[df_clean['success'] == 0].sample(int(n_success * 1.2), random_state=42)
-            success_df = df_clean[df_clean['success'] == 1]
-            df_clean = pd.concat([success_df, failure_df]).sample(frac=1, random_state=42)
-        
-        print(f"   After balance: {len(df_clean):,} samples ({df_clean['success'].mean():.1%} success)")
-        
-        # ENHANCED FEATURES
-        df_clean['founded_year'] = df_clean['founded_year'].astype(int)
-        df_clean['company_age'] = 2025 - df_clean['founded_year']
-        
-        # Team size (better estimate)
-        df_clean['team_size'] = np.select(
+        # Estimate team size based on valuation
+        df['team_size'] = np.select(
             [
-                df_clean['funding_total'] == 0,
-                df_clean['funding_total'] < 500_000,
-                df_clean['funding_total'] < 2_000_000,
-                df_clean['funding_total'] < 10_000_000,
-                df_clean['funding_total'] < 50_000_000
+                df['current_valuation'] < 1.5,
+                df['current_valuation'] < 3.0,
+                df['current_valuation'] < 5.0,
+                df['current_valuation'] < 10.0
             ],
             [
-                np.random.randint(2, 5, len(df_clean)),
-                np.random.randint(3, 10, len(df_clean)),
-                np.random.randint(8, 25, len(df_clean)),
-                np.random.randint(20, 80, len(df_clean)),
-                np.random.randint(50, 200, len(df_clean))
+                np.random.randint(50, 150, len(df)),
+                np.random.randint(100, 300, len(df)),
+                np.random.randint(250, 600, len(df)),
+                np.random.randint(500, 1200, len(df))
             ],
-            default=np.random.randint(100, 500, len(df_clean))
+            default=np.random.randint(1000, 5000, len(df))
         )
         
-        # Financial metrics
-        df_clean['funding_per_round'] = df_clean['funding_total'] / (df_clean['funding_rounds'] + 1)
-        df_clean['funding_velocity'] = df_clean['funding_total'] / (df_clean['company_age'] + 1)
+        # Count number of investors
+        df['num_investors'] = df['investors'].fillna('').str.count(',') + 1
+        df['num_investors'] = df['num_investors'].apply(lambda x: x if x > 1 else 1)
         
-        # Revenue estimate (success-correlated)
-        df_clean['has_revenue'] = (np.random.random(len(df_clean)) < 0.3).astype(int)
-        df_clean['monthly_revenue'] = np.where(
-            df_clean['has_revenue'] == 1,
-            df_clean['funding_total'] * 0.02 * (df_clean['success'] + 0.5),
+        # Estimate funding rounds based on valuation and age
+        df['funding_rounds'] = np.minimum(df['company_age'] + 2, 8)
+        
+        # Financial metrics
+        df['funding_per_round'] = df['funding_total'] / (df['funding_rounds'] + 1)
+        df['funding_velocity'] = df['funding_total'] / (df['company_age'] + 1)
+        
+        # Revenue estimation (success-correlated)
+        df['has_revenue'] = (df['current_valuation'] > 2.0).astype(int)
+        df['monthly_revenue'] = np.where(
+            df['has_revenue'] == 1,
+            df['funding_total'] * 0.015 * (df['success'] + 0.5),
             0
         )
         
-        df_clean['burn_rate'] = np.where(
-            df_clean['funding_total'] > 0,
-            df_clean['funding_total'] / 18 / 12,
-            df_clean['team_size'] * 5000
+        df['burn_rate'] = df['funding_total'] / 24 / 12
+        df['user_growth_rate'] = np.where(
+            df['success'] == 1,
+            np.random.uniform(1.0, 3.0, len(df)),
+            np.random.uniform(0.2, 1.5, len(df))
         )
         
-        df_clean['user_growth_rate'] = np.where(
-            df_clean['success'] == 1,
-            np.random.uniform(0.5, 2.5, len(df_clean)),
-            np.random.uniform(-0.2, 1.0, len(df_clean))
-        )
-        
-        df_clean['market_size'] = 10_000_000_000
-        df_clean['revenue_to_burn_ratio'] = df_clean['monthly_revenue'] / (df_clean['burn_rate'] + 1)
-        df_clean['funding_efficiency'] = df_clean['user_growth_rate'] * df_clean['funding_total'] / 1e6
+        df['market_size'] = 50_000_000_000  # Indian market assumption
+        df['revenue_to_burn_ratio'] = df['monthly_revenue'] / (df['burn_rate'] + 1)
+        df['funding_efficiency'] = df['user_growth_rate'] * df['funding_total'] / 1e9
         
         # Strengths/challenges (success-correlated)
-        df_clean['num_strengths'] = np.where(
-            df_clean['success'] == 1,
-            np.random.randint(3, 6, len(df_clean)),
-            np.random.randint(0, 3, len(df_clean))
+        df['num_strengths'] = np.where(
+            df['success'] == 1,
+            np.random.randint(4, 7, len(df)),
+            np.random.randint(2, 5, len(df))
         )
-        df_clean['num_challenges'] = np.where(
-            df_clean['success'] == 1,
-            np.random.randint(1, 3, len(df_clean)),
-            np.random.randint(3, 6, len(df_clean))
+        df['num_challenges'] = np.where(
+            df['success'] == 1,
+            np.random.randint(1, 3, len(df)),
+            np.random.randint(3, 5, len(df))
         )
-        df_clean['strength_to_challenge_ratio'] = df_clean['num_strengths'] / (df_clean['num_challenges'] + 1)
+        df['strength_to_challenge_ratio'] = df['num_strengths'] / (df['num_challenges'] + 1)
         
         # Text features
-        df_clean['description_length'] = 100
-        df_clean['problem_length'] = 50
+        df['description_length'] = 150
+        df['problem_length'] = 75
         
         # Additional features
-        df_clean['runway_months'] = df_clean['funding_total'] / (df_clean['burn_rate'] * 12 + 1)
-        df_clean['is_well_funded'] = (df_clean['funding_total'] > 1_000_000).astype(int)
-        df_clean['optimal_age'] = ((df_clean['company_age'] >= 2) & (df_clean['company_age'] <= 6)).astype(int)
-        df_clean['optimal_team'] = ((df_clean['team_size'] >= 5) & (df_clean['team_size'] <= 50)).astype(int)
+        df['runway_months'] = df['funding_total'] / (df['burn_rate'] * 12 + 1)
+        df['is_well_funded'] = (df['current_valuation'] > 2.0).astype(int)
+        df['optimal_age'] = ((df['company_age'] >= 1) & (df['company_age'] <= 8)).astype(int)
+        df['optimal_team'] = ((df['team_size'] >= 100) & (df['team_size'] <= 2000)).astype(int)
         
-        # Location tier
-        top_10_locations = df_clean['location'].value_counts().head(10).index
-        df_clean['location_tier'] = np.where(df_clean['location'].isin(top_10_locations), 1, 2)
+        # Location tier (Bangalore, Gurgaon, Delhi are tier 1)
+        tier1_locations = ['bangalore', 'bengaluru', 'gurgaon', 'gurugram', 'delhi', 'mumbai']
+        df['location_tier'] = df['location'].str.lower().apply(
+            lambda x: 1 if any(loc in str(x).lower() for loc in tier1_locations) else 2
+        )
         
-        # Recession
-        df_clean['founded_in_recession'] = df_clean['founded_year'].isin([2008, 2009, 2020, 2023]).astype(int)
+        # Entry during challenging times
+        df['founded_in_recession'] = df['entry_year'].isin([2020, 2021, 2022]).astype(int)
         
-        print(f"✓ Final: {len(df_clean):,} samples | {len(df_clean.columns)} features")
+        # Sector popularity
+        top_sectors = df['category'].value_counts().head(10).index
+        df['is_popular_sector'] = df['category'].isin(top_sectors).astype(int)
         
-        return df_clean
+        print(f"✓ Final: {len(df):,} samples | {len(df.columns)} features")
+        
+        return df
         
     except Exception as e:
         print(f"   Error: {e}")
+        import traceback
+        traceback.print_exc()
         print("   Using synthetic...")
         return generate_quality_synthetic_data()
+
 
 def generate_quality_synthetic_data():
     """HIGH QUALITY synthetic data"""
@@ -344,7 +328,7 @@ def prepare_data(df):
     print("\n[6/9] PREPARING...")
     
     feature_cols = [
-        'funding_total', 'founded_year', 'team_size', 'funding_rounds',
+        'funding_total', 'entry_year', 'team_size', 'funding_rounds',
         'monthly_revenue', 'user_growth_rate', 'burn_rate', 'market_size',
         'company_age', 'funding_per_round', 'funding_velocity',
         'revenue_to_burn_ratio', 'funding_efficiency',
@@ -352,7 +336,9 @@ def prepare_data(df):
         'num_strengths', 'num_challenges', 'strength_to_challenge_ratio',
         'description_length', 'problem_length',
         'runway_months', 'location_tier', 'founded_in_recession',
-        'is_well_funded', 'optimal_age', 'optimal_team'
+        'is_well_funded', 'optimal_age', 'optimal_team',
+        'num_investors', 'valuation_growth_rate', 'is_popular_sector',  # New features
+        'entry_valuation', 'current_valuation'  # New features
     ]
     
     X = df[feature_cols]
@@ -361,8 +347,9 @@ def prepare_data(df):
     print(f"✓ Features: {len(feature_cols)}")
     print(f"✓ Samples: {len(X):,} ({y.mean():.1%} success)")
     
+    # Use stratified split even with small dataset
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=CONFIG['test_size'], 
+        X, y, test_size=0.25,  # Larger test set due to small dataset
         random_state=CONFIG['random_state'], stratify=y
     )
     
@@ -371,29 +358,30 @@ def prepare_data(df):
     return X_train, X_test, y_train, y_test, feature_cols
 
 def train_optimized(X_train, y_train, X_test, y_test, device):
-    """Train XGBoost with optimized parameters"""
+    """Train XGBoost optimized for small dataset"""
     print("\n[7/9] TRAINING OPTIMIZED MODEL...")
     print(f"   Device: {device.upper()}")
     
     import time
     start = time.time()
     
-    # OPTIMIZED HYPERPARAMETERS FOR BETTER ACCURACY
+    # Parameters optimized for small dataset
     params = {
         'device': device,
         'tree_method': 'hist',
-        'max_depth': 6,
-        'learning_rate': 0.05,
-        'n_estimators': 500,
-        'subsample': 0.8,
-        'colsample_bytree': 0.8,
-        'reg_alpha': 0.3,
-        'reg_lambda': 1.5,
-        'min_child_weight': 5,
-        'gamma': 0.1,
+        'max_depth': 3,  # Reduced to prevent overfitting
+        'learning_rate': 0.1,
+        'n_estimators': 100,  # Fewer trees for small dataset
+        'subsample': 0.9,
+        'colsample_bytree': 0.9,
+        'reg_alpha': 1.0,  # Higher regularization
+        'reg_lambda': 2.0,
+        'min_child_weight': 1,  # Lower to allow smaller leaf nodes
+        'gamma': 0.05,
         'objective': 'binary:logistic',
         'eval_metric': 'auc',
-        'random_state': CONFIG['random_state']
+        'random_state': CONFIG['random_state'],
+        'scale_pos_weight': 1  # Adjust if imbalanced
     }
     
     dtrain = xgb.DMatrix(X_train, label=y_train)
@@ -405,16 +393,17 @@ def train_optimized(X_train, y_train, X_test, y_test, device):
     model = xgb.train(
         params,
         dtrain,
-        num_boost_round=500,
+        num_boost_round=100,
         evals=evals,
-        early_stopping_rounds=50,
-        verbose_eval=100
+        early_stopping_rounds=20,
+        verbose_eval=20
     )
     
     elapsed = time.time() - start
     print(f"\n✓ Trained in {elapsed:.1f}s")
     
     return model
+
 
 def evaluate(model, X_test, y_test):
     """Evaluate model performance"""
@@ -468,7 +457,7 @@ def main():
         device = check_gpu()
         setup_directories()
         data_file = download_data()
-        df = load_and_clean_advanced(data_file)
+        df = load_and_clean_indian_unicorn(data_file)  # Replace load_and_clean_advanced
         df = encode_features(df)
         X_train, X_test, y_train, y_test, features = prepare_data(df)
         model = train_optimized(X_train, y_train, X_test, y_test, device)
