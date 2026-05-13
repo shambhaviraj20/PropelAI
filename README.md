@@ -32,7 +32,7 @@
 
 ## 🏗️ System Architecture
 
-*(Placeholder: Insert high-definition system architecture diagram here showing the flow between the React frontend, Node/Express API gateway, MongoDB, and the FastAPI/Python ML microservice.)*
+<img width="391" height="697" alt="Screenshot 2026-05-13 114612" src="https://github.com/user-attachments/assets/1f0285c0-d446-4988-ac2c-95ad16ffcdf4" />
 
 ---
 
